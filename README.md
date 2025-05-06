@@ -27,7 +27,7 @@ As VMs utilizam o sistema operacional Ubuntu Jammy 64bit, com 1GB de memória RA
 | `control/provision.sh`                    | Script de provisionamento da máquina **control**          |
 | `provision_nodes.sh`                      | Script de provisionamento comum para as demais máquinas   |
 | `control/data/add_key_hosts.sh`           | Adiciona a chave SSH da máquina **control** às demais     |
-| `control/data/playbooks/k3s_cluster.yaml` | Playbook Ansible para configurar o cluster K3s            |
+| `control/data/playbooks/k3s-cluster.yaml` | Playbook Ansible para configurar o cluster K3s            |
 | `Vagrantfile`                             | Arquivo de configuração das máquinas                      |
 
 ---
@@ -62,11 +62,14 @@ vagrant ssh
 ansible -m ping all
 
 # Caso o Ansible solicite confirmação da chave de autenticação (key fingerprint)
-# ao tentar se conectar pela primeira vez, 
+# ao tentar se conectar pela primeira vez,
 # digite yes e pressione Enter para aceitar cada conexão com os hosts
 
 # 5. Execute o playbook para criar o cluster K3s
-ansible-playbook ./data/playbooks/k3s_cluster.yaml
+ansible-playbook ./data/playbooks/k3s-cluster.yaml
+
+# Para detalhar o log adicione o parâmetro -vvvv ao comando
+# ansible-playbook ./data/playbooks/k3s-cluster.yaml -vvvv
 ```
 
 ---
@@ -75,7 +78,7 @@ ansible-playbook ./data/playbooks/k3s_cluster.yaml
 
 ```bash
 # Acesse o diretório da máquina master
-cd master
+cd master1
 
 # Conecte-se via SSH
 vagrant ssh
