@@ -1,0 +1,97 @@
+---
+- name: Instalar kubectl e helm
+  hosts: control
+  become: yes
+  tasks:
+    - name: Instalar dependências
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
+
+    # Instalação do kubectl
+    - name: Baixar kubectl versão estável
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      args:
+        creates: ./kubectl
+
+    - name: Instalar kubectl em /usr/local/bin
+      copy:
+        src: ./kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Remover binário temporário do kubectl
+      file:
+        path: ./kubectl
+        state: absent
+
+    # Instalação do Helm
+    - name: Adicionar chave GPG do Helm
+      shell: |
+        curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
+      args:
+        creates: /usr/share/keyrings/helm.gpg
+
+    - name: Adicionar repositório do Helm
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" > /etc/apt/sources.list.d/helm-stable-debian.list
+      args:
+        creates: /etc/apt/sources.list.d/helm-stable-debian.list
+
+    - name: Atualizar cache e instalar Helm
+      apt:
+        name: helm
+        update_cache: yes
+        state: present
+
+# Criando KUBECONFIG
+- name: Obter conteúdo do KUBECONFIG na master
+  hosts: master1
+  become: yes
+  tasks:
+    - name: Ler o conteúdo do k3s.yaml
+      command: cat /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_raw
+      changed_when: false
+
+    - name: Definir conteúdo das variáveis
+      set_fact:
+        kubeconfig_from_master: "{{ kubeconfig_raw.stdout }}"
+        url_from_master: "https://{{ ansible_host }}:6443"
+
+- name: Criar ~/.kube/config no control
+  hosts: control
+  become: yes
+  tasks:
+    - name: Garantir que .kube existe
+      file:
+        path: /home/vagrant/.kube
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0755'
+
+    - name: Criar o conteudo do ~/.kube/config com a variável kubeconfig_from_master
+      copy:
+        content: "{{ hostvars['master1']['kubeconfig_from_master'] }}"
+        dest: /home/vagrant/.kube/config
+        owner: vagrant
+        group: vagrant
+        mode: '0600'
+
+    - name: Substituir IP do servidor no kubeconfig
+      become_user: vagrant
+      lineinfile:
+        path: /home/vagrant/.kube/config
+        regexp: '^\s*server:\s*https://[0-9\.]+:6443'
+        line: "    server: {{ hostvars['master1']['url_from_master'] }}"
+        backrefs: no

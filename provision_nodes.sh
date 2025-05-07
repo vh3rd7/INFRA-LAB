@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Install htop
+apt update && apt install htop -y
+
 # Garante que o usuário 'vagrant' tenha a senha padrão 'vagrant'
 echo 'vagrant:vagrant' | sudo chpasswd
 

@@ -15,8 +15,10 @@
   hosts: master
   become: true
   tasks:
-    - name: Instalar K3s no master
-      shell: curl -sfL https://get.k3s.io | sh -
+    - name: Instalar K3s no master com (--tls-san IP)
+      # curl -sfL https://get.k3s.io | sh -
+      shell: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--tls-san {{ ansible_host }} --tls-san k3s.localdomain" sh -
       args:
         creates: /usr/local/bin/k3s
 

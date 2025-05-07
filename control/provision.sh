@@ -2,7 +2,7 @@
 
 echo "Instalando libs e Python"
 sudo apt update
-sudo apt install -y python3 python3-pip curl zip
+sudo apt install -y python3 python3-pip curl zip htop
 python3 -m pip install --upgrade pip
 # python3 --version
 
@@ -21,7 +21,7 @@ EOT
 echo "Configurando /etc/hosts"
 cat <<EOT >> /etc/hosts
 192.168.1.2 control
-192.168.1.3 master
+192.168.1.3 master1
 192.168.1.4 worker1
 192.168.1.5 worker2
 EOT
@@ -32,8 +32,10 @@ EOT
 echo "Adicionando máquinas ao inventário do Ansible"
 sudo mkdir -p /etc/ansible
 cat <<EOT | sudo tee /etc/ansible/hosts > /dev/null
+control ansible_host=192.168.1.2 ansible_connection=local
+
 [master]
-master ansible_host=192.168.1.3
+master1 ansible_host=192.168.1.3
 
 [workers]
 worker1 ansible_host=192.168.1.4
@@ -70,5 +72,5 @@ sudo -u vagrant bash -c "yes | ssh-keygen -t rsa -b 4096 -f /home/vagrant/.ssh/i
 sudo apt install sshpass -y
 
 # Copia a chave para os nós remotos
-# echo "Copiando chave para acessar master"
-# sshpass -p 'vagrant' ssh-copy-id -o StrictHostKeyChecking=no vagrant@master
+# echo "Copiando chave para acessar master1"
+# sshpass -p 'vagrant' ssh-copy-id -o StrictHostKeyChecking=no vagrant@master1
