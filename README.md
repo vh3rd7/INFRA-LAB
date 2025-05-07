@@ -69,7 +69,13 @@ ansible -m ping all
 ansible-playbook ./data/playbooks/k3s-cluster.yaml
 
 # Para detalhar o log adicione o parâmetro -vvvv ao comando
-# ansible-playbook ./data/playbooks/k3s-cluster.yaml -vvvv
+# ansible-playbook ./data/playbooks/update-pkg.yaml -vvvv
+
+# 6. Instalar o kubectl e o helm no control
+ansible-playbook ./data/playbooks/install-kubectl-helm.yml
+
+# Testar resposta do master
+kubectl get namespaces
 ```
 
 ---
@@ -96,3 +102,5 @@ Se você chegou até aqui sem erros, seu ambiente de testes com Kubernetes está
 🖖
 
 ---
+
+repositório: https://github.com/vh3rd7/infra-lab
